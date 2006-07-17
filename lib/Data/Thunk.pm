@@ -1,35 +1,35 @@
-package Data::Thunk;
-$Data::Thunk::VERSION = '0.01';
+package Data::Defer;
+$Data::Defer::VERSION = '0.01';
 
 use 5.006;
 use strict;
 use warnings;
 use Exporter::Lite;
 use Class::InsideOut qw( private register id );
-our @EXPORT = qw( lazy thunk );
+our @EXPORT = qw( lazy defer );
 
-private _thunk => my %_thunk;
+private _defer => my %_defer;
 
 use overload fallback => 1, map {
     $_ => \&force
 } qw( bool "" 0+ ${} @{} %{} &{} *{} );
 
 sub force (&) {
-    &{$_thunk{ id $_[0] }}
+    &{$_defer{ id $_[0] }}
 }
 
 sub lazy (&) {
     my $cv = shift;
     my $obj = register( bless \(my $s), __PACKAGE__ );
-    $_thunk{ id $obj } = $cv;
+    $_defer{ id $obj } = $cv;
     return $obj;
 }
 
-sub thunk (&) {
+sub defer (&) {
     my $cv = shift;
     my ($value, $forced);
     my $obj = register( bless \(my $s), __PACKAGE__ );
-    $_thunk{ id $obj } = sub {
+    $_defer{ id $obj } = sub {
         $forced ? $value : scalar (++$forced, $value = &$cv)
     };
     return $obj;
@@ -41,33 +41,33 @@ __END__
 
 =head1 NAME
 
-Data::Thunk - Calculate values on demand
+Data::Defer - Calculate values on demand
 
 =head1 SYNOPSIS
 
-    use Data::Thunk; # exports 'lazy' and 'thunk'
+    use Data::Defer; # exports 'defer' and 'lazy'
 
     my ($x, $y);
-    my $lv = lazy { ++$x };     # a lazy-value
-    my $tv = thunk { ++$y };    # a thunk-value
+    my $dv = defer { ++$y };    # a defer-value (not memoized)
+    my $lv = lazy { ++$x };     # a lazy-value (memoized)
 
-    print "$lv $lv $lv"; # 1 2 3
-    print "$tv $tv $tv"; # 1 1 1
+    print "$dv $dv $dv"; # 1 2 3
+    print "$lv $lv $lv"; # 1 1 1
 
 =head1 DESCRIPTION
 
-This module exports two functions, C<lazy> and C<thunk>, for building
+This module exports two functions, C<defer> and C<lazy>, for building
 values that are evaluated on demand.
 
-=head2 lazy {...}
+=head2 defer {...}
 
 Takes a block or a code reference, and returns an overloaded value.
 Each time that value is demanded, the block is evaluated again to
 yield a fresh result.
 
-=head2 thunk {...}
+=head2 lazy {...}
 
-Like C<lazy>, except the value is computed at most once.  Subsequent
+Like C<defer>, except the value is computed at most once.  Subsequent
 evaluation will simly use the cached result.
 
 =head1 NOTES
