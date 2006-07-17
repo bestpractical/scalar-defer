@@ -1,9 +1,9 @@
 use strict;
 use inc::Module::Install;
 
-name        'Data-Thunk';
+name        'Data-Defer';
 license     'MIT';
-all_from    'lib/Data/Thunk.pm';
+all_from    'lib/Data/Defer.pm';
 
 requires    'Class::InsideOut';
 requires    'Exporter::Lite';

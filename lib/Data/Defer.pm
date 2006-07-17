@@ -18,14 +18,14 @@ sub force (&) {
     &{$_defer{ id $_[0] }}
 }
 
-sub lazy (&) {
+sub defer (&) {
     my $cv = shift;
     my $obj = register( bless \(my $s), __PACKAGE__ );
     $_defer{ id $obj } = $cv;
     return $obj;
 }
 
-sub defer (&) {
+sub lazy (&) {
     my $cv = shift;
     my ($value, $forced);
     my $obj = register( bless \(my $s), __PACKAGE__ );
