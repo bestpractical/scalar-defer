@@ -1,0 +1,58 @@
+NAME
+    Data::Thunk - Calculate values on demand
+
+SYNOPSIS
+        use Data::Thunk; # exports "lazy" and "thunk"
+
+        my ($x, $y);
+        my $l = lazy { ++$x };
+        my $t = thunk { ++$y };
+
+        print "$l $l $l"; # 1 2 3
+        print "$t $t $t"; # 1 1 1
+
+DESCRIPTION
+    This module exports two functions, "lazy" and "thunk", for building
+    values that are evaluated on demand.
+
+  lazy {...}
+    Takes a block or a code reference, and returns an overloaded value. Each
+    time that value is demanded, the block is evaluated again to yield a
+    fresh value.
+
+  thunk {...}
+    Like "lazy", except the value is computed at most once. Subsequent
+    evaluation will simly use the cached value.
+
+NOTES
+    Unlike the "tie" based Data::Lazy, this module operates on *values*, not
+    *variables*. Therefore, assigning into $t simply replaces the value.
+
+    The "overload" based implementation also makes this module about 2x
+    faster than Data::Lazy.
+
+AUTHORS
+    Audrey Tang <cpan@audreyt.org>
+
+COPYRIGHT (The "MIT" License)
+    Copyright 2002-2006 by Audrey Tang <cpan@audreyt.org>.
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is fur- nished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FIT- NESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
+    OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+    ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+
