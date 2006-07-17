@@ -1,9 +1,9 @@
 use strict;
 use inc::Module::Install;
 
-name        'Data-Defer';
+name        'Scalar-Defer';
 license     'MIT';
-all_from    'lib/Data/Defer.pm';
+all_from    'lib/Scalar/Defer.pm';
 
 requires    'Class::InsideOut';
 requires    'Exporter::Lite';

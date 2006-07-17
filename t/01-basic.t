@@ -1,5 +1,5 @@
 use Test::More tests => 5;
-use ok 'Data::Defer';
+use ok 'Scalar::Defer';
 
 my ($x, $y);
 my $d = defer { ++$x };
