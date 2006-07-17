@@ -1,5 +1,5 @@
 package Data::Defer;
-$Data::Defer::VERSION = '0.01';
+$Data::Defer::VERSION = '0.02';
 
 use 5.006;
 use strict;
