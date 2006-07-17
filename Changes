@@ -1,7 +1,7 @@
 [Changes for 0.02 - 2006-07-17]
 
-* Changed name from Data::Thunk to Data::Defer, per suggestion
-  from mstrout++ and gaal++.
+* Changed name from Data::Thunk to Scalar::Defer, per suggestion
+  from obra++, mstrout++ and gaal++.
   
 * The "thunk" function is gone; "lazy" is now the memoizing
   variant of "defer".

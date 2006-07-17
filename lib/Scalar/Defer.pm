@@ -1,5 +1,5 @@
-package Data::Defer;
-$Data::Defer::VERSION = '0.02';
+package Scalar::Defer;
+$Scalar::Defer::VERSION = '0.02';
 
 use 5.006;
 use strict;
@@ -41,11 +41,11 @@ __END__
 
 =head1 NAME
 
-Data::Defer - Calculate values on demand
+Scalar::Defer - Calculate values on demand
 
 =head1 SYNOPSIS
 
-    use Data::Defer; # exports 'defer' and 'lazy'
+    use Scalar::Defer; # exports 'defer' and 'lazy'
 
     my ($x, $y);
     my $dv = defer { ++$y };    # a defer-value (not memoized)

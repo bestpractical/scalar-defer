@@ -1,28 +1,28 @@
 NAME
-    Data::Thunk - Calculate values on demand
+    Scalar::Defer - Calculate values on demand
 
 SYNOPSIS
-        use Data::Thunk; # exports "lazy" and "thunk"
+        use Scalar::Defer; # exports 'defer' and 'lazy'
 
         my ($x, $y);
-        my $l = lazy { ++$x };
-        my $t = thunk { ++$y };
+        my $dv = defer { ++$y };    # a defer-value (not memoized)
+        my $lv = lazy { ++$x };     # a lazy-value (memoized)
 
-        print "$l $l $l"; # 1 2 3
-        print "$t $t $t"; # 1 1 1
+        print "$dv $dv $dv"; # 1 2 3
+        print "$lv $lv $lv"; # 1 1 1
 
 DESCRIPTION
-    This module exports two functions, "lazy" and "thunk", for building
+    This module exports two functions, "defer" and "lazy", for building
     values that are evaluated on demand.
 
-  lazy {...}
+  defer {...}
     Takes a block or a code reference, and returns an overloaded value. Each
     time that value is demanded, the block is evaluated again to yield a
-    fresh value.
+    fresh result.
 
-  thunk {...}
-    Like "lazy", except the value is computed at most once. Subsequent
-    evaluation will simly use the cached value.
+  lazy {...}
+    Like "defer", except the value is computed at most once. Subsequent
+    evaluation will simly use the cached result.
 
 NOTES
     Unlike the "tie" based Data::Lazy, this module operates on *values*, not
