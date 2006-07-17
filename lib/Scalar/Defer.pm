@@ -68,12 +68,13 @@ yield a fresh result.
 =head2 lazy {...}
 
 Like C<defer>, except the value is computed at most once.  Subsequent
-evaluation will simly use the cached result.
+evaluation will simply use the cached result.
 
 =head1 NOTES
 
 Unlike the C<tie> based L<Data::Lazy>, this module operates on I<values>,
-not I<variables>.  Therefore, assigning into C<$t> simply replaces the value.
+not I<variables>.  Therefore, assigning into C<$dv> and C<$lv> above will
+simply replace the value, instead of triggering a C<STORE> method call.
 
 The C<overload> based implementation also makes this module about 2x faster
 than L<Data::Lazy>.
