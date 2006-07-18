@@ -5,8 +5,8 @@ SYNOPSIS
         use Scalar::Defer; # exports 'defer' and 'lazy'
 
         my ($x, $y);
-        my $dv = defer { ++$y };    # a defer-value (not memoized)
-        my $lv = lazy { ++$x };     # a lazy-value (memoized)
+        my $dv = defer { ++$x };    # a defer-value (not memoized)
+        my $lv = lazy { ++$y };     # a lazy-value (memoized)
 
         print "$dv $dv $dv"; # 1 2 3
         print "$lv $lv $lv"; # 1 1 1
@@ -22,20 +22,21 @@ DESCRIPTION
 
   lazy {...}
     Like "defer", except the value is computed at most once. Subsequent
-    evaluation will simly use the cached result.
+    evaluation will simply use the cached result.
 
 NOTES
-    Unlike the "tie" based Data::Lazy, this module operates on *values*, not
-    *variables*. Therefore, assigning into $t simply replaces the value.
+    Unlike the "tie"-based Data::Lazy, this module operates on *values*, not
+    *variables*. Therefore, assigning into $dv and $lv above will simply
+    replace the value, instead of triggering a "STORE" method call.
 
-    The "overload" based implementation also makes this module about 2x
-    faster than Data::Lazy.
+    Also, thanks to the "overload"-based implementation, this module is
+    about 2x faster than Data::Lazy.
 
 AUTHORS
     Audrey Tang <cpan@audreyt.org>
 
 COPYRIGHT (The "MIT" License)
-    Copyright 2002-2006 by Audrey Tang <cpan@audreyt.org>.
+    Copyright 2006 by Audrey Tang <cpan@audreyt.org>.
 
     Permission is hereby granted, free of charge, to any person obtaining a
     copy of this software and associated documentation files (the

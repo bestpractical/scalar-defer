@@ -1,5 +1,5 @@
 package Scalar::Defer;
-$Scalar::Defer::VERSION = '0.02';
+$Scalar::Defer::VERSION = '0.03';
 
 use 5.006;
 use strict;
@@ -48,8 +48,8 @@ Scalar::Defer - Calculate values on demand
     use Scalar::Defer; # exports 'defer' and 'lazy'
 
     my ($x, $y);
-    my $dv = defer { ++$y };    # a defer-value (not memoized)
-    my $lv = lazy { ++$x };     # a lazy-value (memoized)
+    my $dv = defer { ++$x };    # a defer-value (not memoized)
+    my $lv = lazy { ++$y };     # a lazy-value (memoized)
 
     print "$dv $dv $dv"; # 1 2 3
     print "$lv $lv $lv"; # 1 1 1
@@ -72,12 +72,12 @@ evaluation will simply use the cached result.
 
 =head1 NOTES
 
-Unlike the C<tie> based L<Data::Lazy>, this module operates on I<values>,
+Unlike the C<tie>-based L<Data::Lazy>, this module operates on I<values>,
 not I<variables>.  Therefore, assigning into C<$dv> and C<$lv> above will
 simply replace the value, instead of triggering a C<STORE> method call.
 
-The C<overload> based implementation also makes this module about 2x faster
-than L<Data::Lazy>.
+Also, thanks to the C<overload>-based implementation, this module is about
+2x faster than L<Data::Lazy>.
 
 =head1 AUTHORS
 
@@ -85,7 +85,7 @@ Audrey Tang E<lt>cpan@audreyt.orgE<gt>
 
 =head1 COPYRIGHT (The "MIT" License)
 
-Copyright 2002-2006 by Audrey Tang <cpan@audreyt.org>.
+Copyright 2006 by Audrey Tang <cpan@audreyt.org>.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
