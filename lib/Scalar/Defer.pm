@@ -1,5 +1,5 @@
 package Scalar::Defer;
-$Scalar::Defer::VERSION = '0.03';
+$Scalar::Defer::VERSION = '0.04';
 
 use 5.006;
 use strict;
@@ -14,7 +14,7 @@ use overload fallback => 1, map {
     $_ => \&force
 } qw( bool "" 0+ ${} @{} %{} &{} *{} );
 
-sub force (&) {
+sub force ($) {
     &{$_defer{ id $_[0] }}
 }
 
@@ -48,11 +48,15 @@ Scalar::Defer - Calculate values on demand
     use Scalar::Defer; # exports 'defer' and 'lazy'
 
     my ($x, $y);
-    my $dv = defer { ++$x };    # a defer-value (not memoized)
-    my $lv = lazy { ++$y };     # a lazy-value (memoized)
+    my $dv = defer { ++$x };    # a deferred value (not memoized)
+    my $lv = lazy { ++$y };     # a lazy value (memoized)
 
     print "$dv $dv $dv"; # 1 2 3
     print "$lv $lv $lv"; # 1 1 1
+
+    my $forced = $dv->force;    # force a normal value out of $dv
+
+    print "$forced $forced $forced"; # 4 4 4
 
 =head1 DESCRIPTION
 
@@ -61,7 +65,7 @@ values that are evaluated on demand.
 
 =head2 defer {...}
 
-Takes a block or a code reference, and returns an overloaded value.
+Takes a block or a code reference, and returns a deferred value.
 Each time that value is demanded, the block is evaluated again to
 yield a fresh result.
 
@@ -69,6 +73,10 @@ yield a fresh result.
 
 Like C<defer>, except the value is computed at most once.  Subsequent
 evaluation will simply use the cached result.
+
+=head2 $value->force
+
+Force calculation of a deferred/lazy value and return a normal value.
 
 =head1 NOTES
 
