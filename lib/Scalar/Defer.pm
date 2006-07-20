@@ -1,28 +1,48 @@
 package Scalar::Defer;
-$Scalar::Defer::VERSION = '0.04';
+$Scalar::Defer::VERSION = '0.05';
 
 use 5.006;
 use strict;
 use warnings;
+use overload ();
 use Exporter::Lite;
 use Class::InsideOut qw( private register id );
-our @EXPORT = qw( lazy defer );
+our @EXPORT = qw( lazy defer force );
 
 private _defer => my %_defer;
 
-use overload fallback => 1, map {
-    $_ => \&force
-} qw( bool "" 0+ ${} @{} %{} &{} *{} );
+BEGIN {
+    overload::OVERLOAD( 0 => fallback => 1, map {
+        $_ => sub { &{$_defer{ Class::InsideOut::id $_[0] }} }
+    } qw( bool "" 0+ ${} @{} %{} &{} *{} ));
 
-sub force ($) {
-    &{$_defer{ id $_[0] }}
+    no strict 'refs';
+    *{"0::AUTOLOAD"} = sub {
+        my $meth = our $AUTOLOAD;
+        my $idx = index($meth, '::');
+        if ($idx >= 0) {
+            $meth = substr($meth, $idx + 2);
+        }
+
+        unshift @_, force(shift());
+        goto &{$_[0]->can($meth)};
+    };
+
+    foreach my $sym (keys %UNIVERSAL::) {
+        *{"0::$sym"} = sub {
+            unshift @_, force(shift());
+            goto &{$_[0]->can($sym)};
+        };
+    }
+
+    *{"0::DESTROY"} = \&DESTROY;
 }
 
 sub defer (&) {
     my $cv = shift;
     my $obj = register( bless \(my $s), __PACKAGE__ );
     $_defer{ id $obj } = $cv;
-    return $obj;
+    bless($obj => 0);
 }
 
 sub lazy (&) {
@@ -32,7 +52,11 @@ sub lazy (&) {
     $_defer{ id $obj } = sub {
         $forced ? $value : scalar (++$forced, $value = &$cv)
     };
-    return $obj;
+    bless($obj => 0);
+}
+
+sub force ($) {
+    &{$_defer{ id $_[0] or return $_[0]}}
 }
 
 1;
@@ -54,14 +78,15 @@ Scalar::Defer - Calculate values on demand
     print "$dv $dv $dv"; # 1 2 3
     print "$lv $lv $lv"; # 1 1 1
 
-    my $forced = $dv->force;    # force a normal value out of $dv
+    my $forced = force $dv;     # force a normal value out of $dv
 
     print "$forced $forced $forced"; # 4 4 4
 
 =head1 DESCRIPTION
 
 This module exports two functions, C<defer> and C<lazy>, for building
-values that are evaluated on demand.
+values that are evaluated on demand.  It also exports a C<force> function
+to force evaluation of a deferred value.
 
 =head2 defer {...}
 
@@ -74,11 +99,16 @@ yield a fresh result.
 Like C<defer>, except the value is computed at most once.  Subsequent
 evaluation will simply use the cached result.
 
-=head2 $value->force
+=head2 force $value
 
-Force calculation of a deferred/lazy value and return a normal value.
+Force evaluation of a deferred value to return a normal value.
+If C<$value> was already normal value, then C<force> simply returns it.
 
 =head1 NOTES
+
+Deferred values are not considered objects (C<ref> on them returns C<0>),
+although you can still call methods on them, in which case the invocant
+is always the forced value.
 
 Unlike the C<tie>-based L<Data::Lazy>, this module operates on I<values>,
 not I<variables>.  Therefore, assigning into C<$dv> and C<$lv> above will

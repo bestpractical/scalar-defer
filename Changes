@@ -1,3 +1,13 @@
+[Changes for 0.05 - 2006-07-19]
+
+* Calling methods on a deferred value now works correctly.
+
+* Deferred values are now blessed into the "0" package, which means
+  Scalar::Util::blessed() and ref() will both return false on them.
+
+* The ->force method is now replaced by an exported "force"
+  function instead.
+
 [Changes for 0.04 - 2006-07-19]
 
 * Document the ->force method for getting a normal value out of a
