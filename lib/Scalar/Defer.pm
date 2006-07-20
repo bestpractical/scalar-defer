@@ -12,9 +12,12 @@ our @EXPORT = qw( lazy defer force );
 private _defer => my %_defer;
 
 BEGIN {
-    overload::OVERLOAD( 0 => fallback => 1, map {
-        $_ => sub { &{$_defer{ Class::InsideOut::id $_[0] }} }
-    } qw( bool "" 0+ ${} @{} %{} &{} *{} ));
+    # Set up overload for the package "0".
+    overload::OVERLOAD(
+        '0' => fallback => 1, map {
+            $_ => sub { &{$_defer{ id $_[0] }} }
+        } qw( bool "" 0+ ${} @{} %{} &{} *{} )
+    );
 
     no strict 'refs';
     *{"0::AUTOLOAD"} = sub {
@@ -24,13 +27,13 @@ BEGIN {
             $meth = substr($meth, $idx + 2);
         }
 
-        unshift @_, force(shift());
+        unshift @_, force(shift(@_));
         goto &{$_[0]->can($meth)};
     };
 
     foreach my $sym (keys %UNIVERSAL::) {
         *{"0::$sym"} = sub {
-            unshift @_, force(shift());
+            unshift @_, force(shift(@_));
             goto &{$_[0]->can($sym)};
         };
     }
