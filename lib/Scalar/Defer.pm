@@ -1,5 +1,5 @@
 package Scalar::Defer;
-$Scalar::Defer::VERSION = '0.05';
+$Scalar::Defer::VERSION = '0.06';
 
 use 5.006;
 use strict;
@@ -12,6 +12,9 @@ our @EXPORT = qw( lazy defer force );
 private _defer => my %_defer;
 
 BEGIN {
+    no strict 'refs';
+    no warnings 'redefine';
+
     # Set up overload for the package "0".
     overload::OVERLOAD(
         '0' => fallback => 1, map {
@@ -19,7 +22,6 @@ BEGIN {
         } qw( bool "" 0+ ${} @{} %{} &{} *{} )
     );
 
-    no strict 'refs';
     *{"0::AUTOLOAD"} = sub {
         my $meth = our $AUTOLOAD;
         my $idx = index($meth, '::');
