@@ -1,5 +1,5 @@
 package Scalar::Defer;
-$Scalar::Defer::VERSION = '0.06';
+$Scalar::Defer::VERSION = '0.07';
 
 use 5.006;
 use strict;
@@ -15,12 +15,12 @@ BEGIN {
     no strict 'refs';
     no warnings 'redefine';
 
-    # Set up overload for the package "0".
-    overload::OVERLOAD(
-        '0' => fallback => 1, map {
-            $_ => sub { &{$_defer{ id $_[0] }} }
-        } qw( bool "" 0+ ${} @{} %{} &{} *{} )
-    );
+    foreach my $sym (keys %UNIVERSAL::) {
+        *{"0::$sym"} = sub {
+            unshift @_, force(shift(@_));
+            goto &{$_[0]->can($sym)};
+        };
+    }
 
     *{"0::AUTOLOAD"} = sub {
         my $meth = our $AUTOLOAD;
@@ -33,14 +33,14 @@ BEGIN {
         goto &{$_[0]->can($meth)};
     };
 
-    foreach my $sym (keys %UNIVERSAL::) {
-        *{"0::$sym"} = sub {
-            unshift @_, force(shift(@_));
-            goto &{$_[0]->can($sym)};
-        };
-    }
-
     *{"0::DESTROY"} = \&DESTROY;
+
+    # Set up overload for the package "0".
+    overload::OVERLOAD(
+        '0' => fallback => 1, map {
+            $_ => sub { &{$_defer{ id $_[0] }} }
+        } qw( bool "" 0+ ${} @{} %{} &{} *{} )
+    );
 }
 
 sub defer (&) {

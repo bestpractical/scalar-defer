@@ -26,4 +26,4 @@ is(ref(force $obj), 'SomeClass', 'ref() returns true for forced values');
 is($obj->meth, 'meth', 'method call works on deferred objects');
 is($obj->can('meth'), SomeClass->can('meth'), '->can works too');
 ok($obj->isa('SomeClass'), '->isa works too');
-is($obj->VERSION, $SomeClass::VERSION, '->VERSION works too');
+is($obj->VERSION, SomeClass->VERSION, '->VERSION works too');
