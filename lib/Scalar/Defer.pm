@@ -116,11 +116,15 @@ although you can still call methods on them, in which case the invocant
 is always the forced value.
 
 Unlike the C<tie>-based L<Data::Lazy>, this module operates on I<values>,
-not I<variables>.  Therefore, assigning into C<$dv> and C<$lv> above will
-simply replace the value, instead of triggering a C<STORE> method call.
+not I<variables>.  Therefore, assigning anothe value into C<$dv> and C<$lv>
+above will simply replace the value, instead of triggering a C<STORE> method
+call.
 
-Also, thanks to the C<overload>-based implementation, this module is about
-2x faster than L<Data::Lazy>.
+Similarily, assigning C<$dv> or C<$dv> into another variable will not trigger
+a C<FETCH> method, but simply propagates the deferred value over without
+evaluationg.  This makes it much faster than a C<tie>-based implementation
+-- even under the worst case scenario, where it's always immediately forced
+after creation, this module is still twice as fast than L<Data::Lazy>.
 
 =head1 AUTHORS
 
