@@ -1,92 +1,102 @@
 package Scalar::Defer;
-$Scalar::Defer::VERSION = '0.10';
 
 use 5.006;
 use strict;
 use warnings;
-use overload ();
+
+BEGIN {
+    our $VERSION = '0.10';
+    our @EXPORT  = qw( lazy defer force );
+}
+
 use Exporter::Lite;
 use Class::InsideOut qw( private register id );
-our @EXPORT = qw( lazy defer force );
+use constant FALSE_PACKAGE => '0';
 
-use constant MAGIC_CLASS_ZERO => 0;
+BEGIN {
+    my %_defer;
 
-private _defer => my %_defer;
+    sub defer (&) {
+        my $cv = shift;
+        my $obj = register( bless(\(my $id) => __PACKAGE__) );
+        $_defer{ $id = id $obj } = $cv;
+        bless($obj => FALSE_PACKAGE);
+    }
+
+    sub lazy (&) {
+        my $cv = shift;
+        my ($value, $forced);
+        my $obj = register( bless(\(my $id) => __PACKAGE__) );
+        $_defer{ $id = id $obj } = sub {
+            $forced ? $value : scalar(++$forced, $value = &$cv)
+        };
+        bless($obj => FALSE_PACKAGE);
+    }
+
+    use constant SUB_FORCE => sub ($) {
+        no warnings 'uninitialized';
+        &{
+            $_defer{ id $_[0] } ||= $_defer{do {
+                #
+                # The memory address was dislocated.  Fortunately, its original
+                # refaddr is saved directly inside the scalar referent slot.
+                #
+                # So we remove the overload by blessing into UNIVERSAL, get the
+                # original refaddr back, and register it with ||= above to avoid
+                # doing the same thing next time. (Afterwards we rebless it back.)
+                # 
+                # This of course assumes that nobody overloads ${} for UNIVERSAL
+                # (which will naturally break all objects using scalar-ref layout);
+                # if someone does, that someone is more crazy than we are and should
+                # be able to handle the consequences.
+                #
+                my $self = $_[0];
+                ref($self) eq FALSE_PACKAGE or return $self;
+
+                bless($self => 'UNIVERSAL');
+                my $id = $$self;
+                bless($self => FALSE_PACKAGE);
+                $id;
+            }} || die("Cannot locate thunk for memory address: ".id($_[0]))
+        };
+    };
+
+    *force = SUB_FORCE();
+}
 
 BEGIN {
     no strict 'refs';
     no warnings 'redefine';
 
-    foreach my $sym (keys %UNIVERSAL::) {
-        *{MAGIC_CLASS_ZERO()."::$sym"} = sub {
-            unshift @_, force(shift(@_));
-            goto &{$_[0]->can($sym)};
-        };
+    {
+        foreach my $sym (keys %UNIVERSAL::) {
+            *{FALSE_PACKAGE()."::$sym"} = sub {
+                unshift @_, SUB_FORCE()->(shift(@_));
+                goto &{$_[0]->can($sym)};
+            };
+        }
     }
 
-    *{MAGIC_CLASS_ZERO()."::AUTOLOAD"} = sub {
+    *{FALSE_PACKAGE()."::AUTOLOAD"} = sub {
         my $meth = our $AUTOLOAD;
         my $idx = index($meth, '::');
         if ($idx >= 0) {
             $meth = substr($meth, $idx + 2);
         }
 
-        unshift @_, force(shift(@_));
+        unshift @_, SUB_FORCE()->(shift(@_));
         goto &{$_[0]->can($meth)};
     };
 
-    *{MAGIC_CLASS_ZERO()."::DESTROY"} = \&DESTROY;
+    *{FALSE_PACKAGE()."::DESTROY"} = \&DESTROY;
 
     # Set up overload for the package "0".
+    require overload;
     overload::OVERLOAD(
-        MAGIC_CLASS_ZERO() => fallback => 1, map {
-            $_ => sub {
-                &{
-                    $_defer{ id $_[0] } ||= $_defer{do {
-                        #
-                        # The memory address was dislocated.  Fortunately, its original
-                        # refaddr is saved directly inside the scalar referent slot.
-                        #
-                        # So we remove the overload by blessing into UNIVERSAL, get the
-                        # original refaddr back, and register it with ||= above to avoid
-                        # doing the same thing next time. (Afterwards we rebless it back.)
-                        # 
-                        # This of course assumes that nobody overloads ${} for UNIVERSAL
-                        # (which will naturally break all objects using scalar-ref layout);
-                        # if someone does, that someone is more crazy than we are and should
-                        # be able to handle the consequences.
-                        #
-                        my $self = $_[0];
-                        bless($self => 'UNIVERSAL');
-                        my $id = $$self;
-                        bless($self => MAGIC_CLASS_ZERO);
-                        $id;
-                    }} || die("Cannot locate thunk for memory address: ".id $_[0])
-                };
-            }
+        FALSE_PACKAGE() => fallback => 1, map {
+            $_ => SUB_FORCE(),
         } qw( bool "" 0+ ${} @{} %{} &{} *{} )
     );
-}
-
-sub defer (&) {
-    my $cv = shift;
-    my $obj = register( bless \(my $id), __PACKAGE__ );
-    $_defer{ $id = id $obj } = $cv;
-    bless($obj => MAGIC_CLASS_ZERO);
-}
-
-sub lazy (&) {
-    my $cv = shift;
-    my ($value, $forced);
-    my $obj = register( bless \(my $id), __PACKAGE__ );
-    $_defer{ $id = id $obj } = sub {
-        $forced ? $value : scalar(++$forced, $value = &$cv)
-    };
-    bless($obj => MAGIC_CLASS_ZERO);
-}
-
-sub force ($) {
-    &{$_defer{ id $_[0] or return $_[0]} or return $_[0]};
 }
 
 1;
@@ -95,11 +105,11 @@ __END__
 
 =head1 NAME
 
-Scalar::Defer - Calculate values on demand
+Scalar::Defer - Lazy evaluation in Perl
 
 =head1 SYNOPSIS
 
-    use Scalar::Defer; # exports 'defer' and 'lazy'
+    use Scalar::Defer; # exports 'defer', 'lazy' and 'force'
 
     my ($x, $y);
     my $dv = defer { ++$x };    # a deferred value (not memoized)
@@ -114,7 +124,7 @@ Scalar::Defer - Calculate values on demand
 
 =head1 DESCRIPTION
 
-This module exports two functions, C<defer> and C<lazy>, for building
+This module exports two functions, C<defer> and C<lazy>, for constructing
 values that are evaluated on demand.  It also exports a C<force> function
 to force evaluation of a deferred value.
 
@@ -155,25 +165,30 @@ after creation, this module is still twice as fast than L<Data::Lazy>.
 
 Audrey Tang E<lt>cpan@audreyt.orgE<gt>
 
-=head1 COPYRIGHT (The "MIT" License)
+=head1 COPYRIGHT
 
-Copyright 2006 by Audrey Tang <cpan@audreyt.org>.
+Copyright 2006, 2007 by Audrey Tang <cpan@audreyt.org>.
+
+This software is released under the MIT license cited below.
+
+=head2 The "MIT" License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is fur-
-nished to do so, subject to the following conditions:
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FIT-
-NESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X
-CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
 
 =cut

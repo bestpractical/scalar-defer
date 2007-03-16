@@ -1,3 +1,11 @@
+[Changes for 0.10 - 2007-03-16]
+
+* Recover gracefully after the Perl runtime reallocates
+  lazy value's pointer address.
+  Reported by: Yves Agostini
+
+* Much more improved error message when a thunk cannot be located.
+
 [Changes for 0.07 - 2006-07-21]
 
 * Updated internals to work with Pel 5.9.x.
