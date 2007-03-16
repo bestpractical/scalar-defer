@@ -1,5 +1,5 @@
 package Scalar::Defer;
-$Scalar::Defer::VERSION = '0.07';
+$Scalar::Defer::VERSION = '0.10';
 
 use 5.006;
 use strict;
@@ -9,6 +9,8 @@ use Exporter::Lite;
 use Class::InsideOut qw( private register id );
 our @EXPORT = qw( lazy defer force );
 
+use constant MAGIC_CLASS_ZERO => 0;
+
 private _defer => my %_defer;
 
 BEGIN {
@@ -16,13 +18,13 @@ BEGIN {
     no warnings 'redefine';
 
     foreach my $sym (keys %UNIVERSAL::) {
-        *{"0::$sym"} = sub {
+        *{MAGIC_CLASS_ZERO()."::$sym"} = sub {
             unshift @_, force(shift(@_));
             goto &{$_[0]->can($sym)};
         };
     }
 
-    *{"0::AUTOLOAD"} = sub {
+    *{MAGIC_CLASS_ZERO()."::AUTOLOAD"} = sub {
         my $meth = our $AUTOLOAD;
         my $idx = index($meth, '::');
         if ($idx >= 0) {
@@ -33,35 +35,58 @@ BEGIN {
         goto &{$_[0]->can($meth)};
     };
 
-    *{"0::DESTROY"} = \&DESTROY;
+    *{MAGIC_CLASS_ZERO()."::DESTROY"} = \&DESTROY;
 
     # Set up overload for the package "0".
     overload::OVERLOAD(
-        '0' => fallback => 1, map {
-            $_ => sub { &{$_defer{ id $_[0] }} }
+        MAGIC_CLASS_ZERO() => fallback => 1, map {
+            $_ => sub {
+                &{
+                    $_defer{ id $_[0] } ||= $_defer{do {
+                        #
+                        # The memory address was dislocated.  Fortunately, its original
+                        # refaddr is saved directly inside the scalar referent slot.
+                        #
+                        # So we remove the overload by blessing into UNIVERSAL, get the
+                        # original refaddr back, and register it with ||= above to avoid
+                        # doing the same thing next time. (Afterwards we rebless it back.)
+                        # 
+                        # This of course assumes that nobody overloads ${} for UNIVERSAL
+                        # (which will naturally break all objects using scalar-ref layout);
+                        # if someone does, that someone is more crazy than we are and should
+                        # be able to handle the consequences.
+                        #
+                        my $self = $_[0];
+                        bless($self => 'UNIVERSAL');
+                        my $id = $$self;
+                        bless($self => MAGIC_CLASS_ZERO);
+                        $id;
+                    }} || die("Cannot locate thunk for memory address: ".id $_[0])
+                };
+            }
         } qw( bool "" 0+ ${} @{} %{} &{} *{} )
     );
 }
 
 sub defer (&) {
     my $cv = shift;
-    my $obj = register( bless \(my $s), __PACKAGE__ );
-    $_defer{ id $obj } = $cv;
-    bless($obj => 0);
+    my $obj = register( bless \(my $id), __PACKAGE__ );
+    $_defer{ $id = id $obj } = $cv;
+    bless($obj => MAGIC_CLASS_ZERO);
 }
 
 sub lazy (&) {
     my $cv = shift;
     my ($value, $forced);
-    my $obj = register( bless \(my $s), __PACKAGE__ );
-    $_defer{ id $obj } = sub {
-        $forced ? $value : scalar (++$forced, $value = &$cv)
+    my $obj = register( bless \(my $id), __PACKAGE__ );
+    $_defer{ $id = id $obj } = sub {
+        $forced ? $value : scalar(++$forced, $value = &$cv)
     };
-    bless($obj => 0);
+    bless($obj => MAGIC_CLASS_ZERO);
 }
 
 sub force ($) {
-    &{$_defer{ id $_[0] or return $_[0]}}
+    &{$_defer{ id $_[0] or return $_[0]} or return $_[0]};
 }
 
 1;
