@@ -5,13 +5,14 @@ use strict;
 use warnings;
 
 BEGIN {
-    our $VERSION = '0.10';
+    our $VERSION = '0.11';
     our @EXPORT  = qw( lazy defer force );
 }
 
 use Exporter::Lite;
 use Class::InsideOut qw( private register id );
 use constant FALSE_PACKAGE => '0';
+use constant DEFER_PACKAGE => '0';
 
 BEGIN {
     my %_defer;
@@ -20,7 +21,7 @@ BEGIN {
         my $cv = shift;
         my $obj = register( bless(\(my $id) => __PACKAGE__) );
         $_defer{ $id = id $obj } = $cv;
-        bless($obj => FALSE_PACKAGE);
+        bless($obj => DEFER_PACKAGE);
     }
 
     sub lazy (&) {
@@ -30,7 +31,7 @@ BEGIN {
         $_defer{ $id = id $obj } = sub {
             $forced ? $value : scalar(++$forced, $value = &$cv)
         };
-        bless($obj => FALSE_PACKAGE);
+        bless($obj => DEFER_PACKAGE);
     }
 
     use constant SUB_FORCE => sub ($) {
@@ -51,11 +52,11 @@ BEGIN {
                 # be able to handle the consequences.
                 #
                 my $self = $_[0];
-                ref($self) eq FALSE_PACKAGE or return $self;
+                ref($self) eq DEFER_PACKAGE or return $self;
 
                 bless($self => 'UNIVERSAL');
                 my $id = $$self;
-                bless($self => FALSE_PACKAGE);
+                bless($self => DEFER_PACKAGE);
                 $id;
             }} || die("Cannot locate thunk for memory address: ".id($_[0]))
         };
@@ -65,38 +66,43 @@ BEGIN {
 }
 
 BEGIN {
-    no strict 'refs';
-    no warnings 'redefine';
+    package Scalar::Defer::Deferred;
+    use overload (
+        fallback => 1, map {
+            $_ => Scalar::Defer::SUB_FORCE(),
+        } qw( bool "" 0+ ${} @{} %{} &{} *{} )
+    );
 
-    {
-        foreach my $sym (keys %UNIVERSAL::) {
-            *{FALSE_PACKAGE()."::$sym"} = sub {
-                unshift @_, SUB_FORCE()->(shift(@_));
-                goto &{$_[0]->can($sym)};
-            };
-        }
-    }
-
-    *{FALSE_PACKAGE()."::AUTOLOAD"} = sub {
+    sub AUTOLOAD {
         my $meth = our $AUTOLOAD;
-        my $idx = index($meth, '::');
+        my $idx  = index($meth, '::');
+
         if ($idx >= 0) {
             $meth = substr($meth, $idx + 2);
         }
 
-        unshift @_, SUB_FORCE()->(shift(@_));
+        unshift @_, Scalar::Defer::SUB_FORCE()->(shift(@_));
         goto &{$_[0]->can($meth)};
     };
 
-    *{FALSE_PACKAGE()."::DESTROY"} = \&DESTROY;
+    {
+        no strict 'refs';
+        no warnings 'redefine';
 
-    # Set up overload for the package "0".
-    require overload;
-    overload::OVERLOAD(
-        FALSE_PACKAGE() => fallback => 1, map {
-            $_ => SUB_FORCE(),
-        } qw( bool "" 0+ ${} @{} %{} &{} *{} )
-    );
+        foreach my $sym (keys %UNIVERSAL::) {
+            *{$sym} = sub {
+                unshift @_, Scalar::Defer::SUB_FORCE()->(shift(@_));
+                goto &{$_[0]->can($sym)};
+            };
+        }
+
+        *DESTROY = \&Scalar::Defer::DESTROY;
+    }
+}
+
+BEGIN {
+    no strict 'refs';
+    @{FALSE_PACKAGE().'::ISA'} = ('Scalar::Defer::Deferred');
 }
 
 1;

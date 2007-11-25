@@ -1,6 +1,6 @@
 #line 1
 package ok;
-$ok::VERSION = 0.01;
+$ok::VERSION = 0.02;
 
 use strict;
 use Test::More ();
@@ -16,4 +16,4 @@ sub import {
 
 __END__
 
-#line 40
+#line 59

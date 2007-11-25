@@ -10,5 +10,7 @@ requires    'Exporter::Lite';
 include_deps 'ok';
 include_deps 'Test::More';
 
+auto_install;
 auto_provides;
+
 sign; WriteAll;
