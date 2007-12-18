@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 BEGIN {
-    our $VERSION = '0.11';
+    our $VERSION = '0.12';
     our @EXPORT  = qw( lazy defer force );
 }
 
