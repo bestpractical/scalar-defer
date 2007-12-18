@@ -34,6 +34,10 @@ BEGIN {
         bless($obj => DEFER_PACKAGE);
     }
 
+    sub DEMOLISH {
+        delete $_defer{ id shift };
+    }
+
     use constant SUB_FORCE => sub ($) {
         no warnings 'uninitialized';
         &{
@@ -97,6 +101,7 @@ BEGIN {
         }
 
         *DESTROY = \&Scalar::Defer::DESTROY;
+        *DESTROY = \&Scalar::Defer::DEMOLISH;
     }
 }
 
