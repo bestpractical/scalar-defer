@@ -100,8 +100,8 @@ BEGIN {
             };
         }
 
-        *DESTROY = \&Scalar::Defer::DESTROY;
-        *DESTROY = \&Scalar::Defer::DEMOLISH;
+        *DESTROY  = \&Scalar::Defer::DESTROY;
+        *DEMOLISH = \&Scalar::Defer::DEMOLISH;
     }
 }
 
