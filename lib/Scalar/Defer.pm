@@ -90,14 +90,19 @@ BEGIN {
     };
 
     {
-        no strict 'refs';
-        no warnings 'redefine';
-
         foreach my $sym (keys %UNIVERSAL::) {
-            *{$sym} = sub {
-                unshift @_, Scalar::Defer::SUB_FORCE()->(shift(@_));
-                goto &{$_[0]->can($sym)};
-            };
+			my $code = 'sub $sym {
+				if ( defined Scalar::Util::blessed($_[0]) ) { # FUCK
+					unshift @_, Scalar::Defer::SUB_FORCE()->(shift(@_));
+					goto &{$_[0]->can("$sym")};
+				} else {
+					return shift->SUPER::$sym(@_);
+				}
+            }';
+
+			$code =~ s/\$sym/$sym/ge;
+
+			eval $code;
         }
 
         *DESTROY  = \&Scalar::Defer::DESTROY;

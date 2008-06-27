@@ -1,4 +1,4 @@
-use Test::More tests => 14;
+use Test::More tests => 19;
 use ok 'Scalar::Defer';
 
 my ($x, $y);
@@ -27,3 +27,10 @@ is($obj->meth, 'meth', 'method call works on deferred objects');
 is($obj->can('meth'), SomeClass->can('meth'), '->can works too');
 ok($obj->isa('SomeClass'), '->isa works too');
 is($obj->VERSION, SomeClass->VERSION, '->VERSION works too');
+
+ok( Scalar::Defer->can("can"), "can('can') as a class method" );
+ok( !Scalar::Defer::Deferred->can('blah'), "can('blah') is false as a class method" );
+
+ok( $obj->can("can"), "can('can') as an object method" );
+ok( $obj->can("meth"), "can('meth')");
+ok( !$obj->can('blah'), "can('blah') is false as an object method" );
