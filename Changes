@@ -1,3 +1,10 @@
+[Changes for 0.13 - 2008-06-27]
+
+* Fix infinite recursion on UNIVERSAL methods used as class methods on
+  Scalar::Defer::Deferred itself
+  http://rt.cpan.org/Public/Bug/Display.html?id=37153
+
+
 [Changes for 0.12 - 2007-12-18]
 
 * Clean out the local storage when the InsideOut object goes away.
