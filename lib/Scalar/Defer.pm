@@ -90,7 +90,7 @@ BEGIN {
     };
 
     {
-        foreach my $sym (keys %UNIVERSAL::) {
+        foreach my $sym (grep { $_ ne 'DESTROY' } keys %UNIVERSAL::) {
 			my $code = 'sub $sym {
 				if ( defined Scalar::Util::blessed($_[0]) ) { # FUCK
 					unshift @_, Scalar::Defer::SUB_FORCE()->(shift(@_));
