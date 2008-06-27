@@ -5,37 +5,44 @@ use strict;
 use warnings;
 
 BEGIN {
-    our $VERSION = '0.13';
-    our @EXPORT  = qw( lazy defer force );
+    our $VERSION   = '0.15';
+    our @EXPORT    = qw( lazy defer force );
+    our @EXPORT_OK = qw( is_deferred );
 }
 
 use Exporter::Lite;
-use Class::InsideOut qw( private register id );
-use constant FALSE_PACKAGE => '0';
-use constant DEFER_PACKAGE => '0';
+use Class::InsideOut qw( register id );
+use constant DEFER_PACKAGE => '0'; # This may change soon
 
 BEGIN {
     my %_defer;
 
     sub defer (&) {
-        my $cv = shift;
+        my $cv  = shift;
         my $obj = register( bless(\(my $id) => __PACKAGE__) );
         $_defer{ $id = id $obj } = $cv;
         bless($obj => DEFER_PACKAGE);
     }
 
     sub lazy (&) {
-        my $cv = shift;
-        my ($value, $forced);
+        my $cv  = shift;
         my $obj = register( bless(\(my $id) => __PACKAGE__) );
+
+        my ($value, $forced);
         $_defer{ $id = id $obj } = sub {
             $forced ? $value : scalar(++$forced, $value = &$cv)
         };
-        bless($obj => DEFER_PACKAGE);
+
+        bless $obj => DEFER_PACKAGE;
     }
 
     sub DEMOLISH {
-        delete $_defer{ id shift };
+        delete $_defer{ id $_[0] };
+    }
+
+    sub is_deferred ($) {
+        no warnings 'uninitialized';
+        ref $_[0] eq DEFER_PACKAGE;
     }
 
     use constant SUB_FORCE => sub ($) {
@@ -62,7 +69,10 @@ BEGIN {
                 my $id = $$self;
                 bless($self => DEFER_PACKAGE);
                 $id;
-            }} || die("Cannot locate thunk for memory address: ".id($_[0]))
+            }} or do {
+                return 0 if caller eq 'Class::InsideOut';
+                die sprintf("Cannot locate thunk for memory address: 0x%X", id $_[0]);
+            };
         };
     };
 
@@ -91,18 +101,20 @@ BEGIN {
 
     {
         foreach my $sym (grep { $_ ne 'DESTROY' } keys %UNIVERSAL::) {
-			my $code = 'sub $sym {
-				if ( defined Scalar::Util::blessed($_[0]) ) { # FUCK
-					unshift @_, Scalar::Defer::SUB_FORCE()->(shift(@_));
-					goto &{$_[0]->can("$sym")};
-				} else {
-					return shift->SUPER::$sym(@_);
-				}
-            }';
+            my $code = q[
+                sub $sym {
+                    if ( defined Scalar::Util::blessed($_[0]) ) {
+                        unshift @_, Scalar::Defer::SUB_FORCE()->(shift(@_));
+                        goto &{$_[0]->can("$sym")};
+                    } else {
+                        return shift->SUPER::$sym(@_);
+                    }
+                }
+            ];
 
-			$code =~ s/\$sym/$sym/ge;
+            $code =~ s/\$sym/$sym/ge;
 
-			eval $code;
+            eval $code;
         }
 
         *DESTROY  = \&Scalar::Defer::DESTROY;
@@ -112,7 +124,7 @@ BEGIN {
 
 BEGIN {
     no strict 'refs';
-    @{FALSE_PACKAGE().'::ISA'} = ('Scalar::Defer::Deferred');
+    @{DEFER_PACKAGE().'::ISA'} = ('Scalar::Defer::Deferred');
 }
 
 1;
@@ -158,7 +170,15 @@ evaluation will simply use the cached result.
 =head2 force $value
 
 Force evaluation of a deferred value to return a normal value.
-If C<$value> was already normal value, then C<force> simply returns it.
+If C<$value> was already a normal value, then C<force> simply returns it.
+
+=head2 is_deferred $value
+
+Tells whether the argument is a deferred value or not. (Lazy values are
+deferred too.)
+
+The C<is_deferred> function is not exported by default; to import it, name
+it explicitly in the import list.
 
 =head1 NOTES
 
@@ -167,7 +187,7 @@ although you can still call methods on them, in which case the invocant
 is always the forced value.
 
 Unlike the C<tie>-based L<Data::Lazy>, this module operates on I<values>,
-not I<variables>.  Therefore, assigning anothe value into C<$dv> and C<$lv>
+not I<variables>.  Therefore, assigning another value into C<$dv> and C<$lv>
 above will simply replace the value, instead of triggering a C<STORE> method
 call.
 
@@ -177,13 +197,24 @@ evaluationg.  This makes it much faster than a C<tie>-based implementation
 -- even under the worst case scenario, where it's always immediately forced
 after creation, this module is still twice as fast than L<Data::Lazy>.
 
+=head1 CAVEATS
+
+Bad things may happen if this module interacts with any other code which
+fiddles with package C<0>.
+
+=head1 SEE ALSO
+
+L<Data::Thunk>, which implements C<lazy> values that can replace itself
+upon forcing, leaving a minimal trace of the thunk, with some sneaky XS
+magic in L<Data::Swap>.
+
 =head1 AUTHORS
 
 Audrey Tang E<lt>cpan@audreyt.orgE<gt>
 
 =head1 COPYRIGHT
 
-Copyright 2006, 2007 by Audrey Tang <cpan@audreyt.org>.
+Copyright 2006, 2007, 2008 by Audrey Tang <cpan@audreyt.org>.
 
 This software is released under the MIT license cited below.
 
