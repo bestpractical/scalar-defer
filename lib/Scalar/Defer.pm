@@ -5,11 +5,12 @@ use strict;
 use warnings;
 
 BEGIN {
-    our $VERSION   = '0.15';
+    our $VERSION   = '0.16';
     our @EXPORT    = qw( lazy defer force );
     our @EXPORT_OK = qw( is_deferred );
 }
 
+use Scalar::Util;
 use Exporter::Lite;
 use Class::InsideOut qw( register id );
 use constant DEFER_PACKAGE => '0'; # This may change soon
@@ -100,21 +101,24 @@ BEGIN {
     };
 
     {
-        foreach my $sym (grep { $_ ne 'DESTROY' } keys %UNIVERSAL::) {
+        foreach my $sym (grep { $_ ne 'DESTROY' and $_ ne 'BEGIN' and $_ ne 'END' } keys %UNIVERSAL::) {
             my $code = q[
                 sub $sym {
                     if ( defined Scalar::Util::blessed($_[0]) ) {
                         unshift @_, Scalar::Defer::SUB_FORCE()->(shift(@_));
                         goto &{$_[0]->can("$sym")};
-                    } else {
+                    }
+                    else {
                         return shift->SUPER::$sym(@_);
                     }
                 }
             ];
 
-            $code =~ s/\$sym/$sym/ge;
+            $code =~ s/\$sym/$sym/g;
 
+            local $@;
             eval $code;
+            warn $@ if $@;
         }
 
         *DESTROY  = \&Scalar::Defer::DESTROY;

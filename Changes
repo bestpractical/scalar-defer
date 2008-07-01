@@ -1,3 +1,8 @@
+[Changes for 0.16 - 2008-07-01]
+
+* The previous version would clobber @ARGV when used with
+  UNIVERSAL::require.  Sorry.
+
 [Changes for 0.15 - 2008-06-27]
 
 * Fix infinite recursion on UNIVERSAL methods used as class methods on
