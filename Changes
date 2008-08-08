@@ -1,3 +1,7 @@
+[Changes for 0.17 - 2008-08-08]
+
+* Warnings avoidance on AUTOLOAD subs. Patch and test by ISHIGAKI++
+
 [Changes for 0.16 - 2008-07-01]
 
 * The previous version would clobber @ARGV when used with

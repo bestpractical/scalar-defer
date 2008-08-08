@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 BEGIN {
-    our $VERSION   = '0.16';
+    our $VERSION   = '0.17';
     our @EXPORT    = qw( lazy defer force );
     our @EXPORT_OK = qw( is_deferred );
 }
@@ -101,7 +101,7 @@ BEGIN {
     };
 
     {
-        foreach my $sym (grep { $_ ne 'DESTROY' and $_ ne 'BEGIN' and $_ ne 'END' } keys %UNIVERSAL::) {
+        foreach my $sym (grep { $_ ne 'DESTROY' and $_ ne 'BEGIN' and $_ ne 'END' and $_ ne 'AUTOLOAD' } keys %UNIVERSAL::) {
             my $code = q[
                 sub $sym {
                     if ( defined Scalar::Util::blessed($_[0]) ) {
