@@ -1,3 +1,7 @@
+[Changes for 0.18 - 2008-08-12]
+
+* Patch from ISHIGAKI++ to fix broken tests on perl 5.10.0
+
 [Changes for 0.17 - 2008-08-08]
 
 * Warnings avoidance on AUTOLOAD subs. Patch and test by ISHIGAKI++

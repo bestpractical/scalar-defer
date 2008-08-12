@@ -7,7 +7,7 @@ plan skip_all => 'this test requires IO::Capture::Stderr' if $@;
 
 plan tests => 1;
 
-local $UNIVERSAL::{AUTOLOAD} = sub {};
+local $UNIVERSAL::{AUTOLOAD} = 1;
 
 my $capture = IO::Capture::Stderr->new;
 $capture->start;
