@@ -101,7 +101,7 @@ BEGIN {
     };
 
     {
-        foreach my $sym (grep { $_ ne 'DESTROY' and $_ ne 'BEGIN' and $_ ne 'END' and $_ ne 'AUTOLOAD' } keys %UNIVERSAL::) {
+        foreach my $sym (grep { $_ ne 'DESTROY' and $_ ne 'DEMOLISH' and $_ ne 'BEGIN' and $_ ne 'END' and $_ ne 'AUTOLOAD' } keys %UNIVERSAL::) {
             my $code = q[
                 sub $sym {
                     if ( defined Scalar::Util::blessed($_[0]) ) {

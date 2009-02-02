@@ -1,3 +1,7 @@
+[Changes for 0.19 - ???]
+
+* Silence Scalar::Defer::Deferred::DEMOLISH warnings
+
 [Changes for 0.18 - 2008-08-12]
 
 * Patch from ISHIGAKI++ to fix broken tests on perl 5.10.0
