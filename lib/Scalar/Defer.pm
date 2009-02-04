@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 BEGIN {
-    our $VERSION   = '0.18';
+    our $VERSION   = '0.19';
     our @EXPORT    = qw( lazy defer force );
     our @EXPORT_OK = qw( is_deferred );
 }
@@ -218,7 +218,7 @@ Audrey Tang E<lt>cpan@audreyt.orgE<gt>
 
 =head1 COPYRIGHT
 
-Copyright 2006, 2007, 2008 by Audrey Tang <cpan@audreyt.org>.
+Copyright 2006, 2007, 2008, 2009 by Audrey Tang <cpan@audreyt.org>.
 
 This software is released under the MIT license cited below.
 
