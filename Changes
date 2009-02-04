@@ -1,3 +1,7 @@
+[Changes for 0.20 - 20090-02-04]
+
+* No code changes. 0.19 dist was incorrectly built from blib
+
 [Changes for 0.19 - 20090-02-04]
 
 * Silence Scalar::Defer::Deferred::DEMOLISH warnings - SARTAK++
