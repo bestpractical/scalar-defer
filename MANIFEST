@@ -11,8 +11,10 @@ inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 inc/ok.pm
+inc/parent.pm
 inc/PerlIO.pm
 inc/Test/Builder.pm
+inc/Test/Builder/IO/Scalar.pm
 inc/Test/Builder/Module.pm
 inc/Test/More.pm
 lib/Scalar/Defer.pm
