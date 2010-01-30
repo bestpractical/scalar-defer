@@ -13,5 +13,14 @@ include_deps 'Test::More';
 auto_install;
 auto_provides;
 
-sign; 
+sign;
 WriteAll;
+
+warn "\n\n\n".<<EOT."\n" if $] == 5.008009;
+************************************************************
+WARNING: Performance under perl 5.8.9 can be extremely poor,
+due to bad interactions between overload and bless.  You may
+wish to consider upgrading to a more recent version of perl
+if the performance of Scalar::Defer is important.
+************************************************************
+EOT
