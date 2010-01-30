@@ -14,10 +14,10 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 4fa271361eea4f32eb5c16cf3ace7236cecfa624 Changes
+SHA1 fd933d44c93142d78652b1246d6d4ba145e5ff34 Changes
 SHA1 c8f8d36e7d20dcbe00698733f42c3fa57f1ad831 MANIFEST
-SHA1 52ef325f18fe59fa1f52e3525f4104e3ab4abf48 META.yml
-SHA1 eef5a6f2e6bc9efe02c137b050c64ba1bd438eab Makefile.PL
+SHA1 6010157e16e93e5c024f8deb7ae81836e37c3d36 META.yml
+SHA1 d952b8c5b7a0ae7906acda3c15215f00c1f72ac5 Makefile.PL
 SHA1 91735f73073ea3d7b2d64047e45d25355f516752 README
 SHA1 e5fb92ac217988bfc7a6af739b0459627020a27e inc/Module/AutoInstall.pm
 SHA1 fd5f3c4f0418efee3b9b16cf8c3902e8374909df inc/Module/Install.pm
@@ -30,21 +30,21 @@ SHA1 3e83972921d54198d1246f7278f08664006cd65d inc/Module/Install/Makefile.pm
 SHA1 12bf1867955480d47d5171a9e9c6a96fabe0b58f inc/Module/Install/Metadata.pm
 SHA1 f7ee667e878bd2faf22ee9358a7b5a2cc8e91ba4 inc/Module/Install/Win32.pm
 SHA1 8ed29d6cf217e0977469575d788599cbfb53a5ca inc/Module/Install/WriteAll.pm
-SHA1 fb1a897882981885fb57a77fba9bdc588053fc2a inc/PerlIO.pm
+SHA1 8b1cc43f1fc02b371cf5232e7071d3c2697f9f78 inc/PerlIO.pm
 SHA1 f7582b52d18e4b1b1bf24b3b7a29ccbf9a8ef00c inc/Test/Builder.pm
 SHA1 afc89bc18836c24cac226e5307a0130952832992 inc/Test/Builder/IO/Scalar.pm
 SHA1 4694604f76a8ed3e7bd049b2339d3a85c0d39de4 inc/Test/Builder/Module.pm
 SHA1 108e94af93b785625dde019b4191774f33ceea13 inc/Test/More.pm
 SHA1 55be398173a2d979a648a73a28c8b3a40531dbba inc/ok.pm
-SHA1 b526160f58a03562738f361878a6e65e3d79796a inc/parent.pm
-SHA1 5fc09e95a7d44f540570a91c72e0020acbc34a1c lib/Scalar/Defer.pm
+SHA1 332cadac06258e648a7407ee65833f367761de09 inc/parent.pm
+SHA1 354898db0d6bc7c73d1e84e24fce0b94bc53eb82 lib/Scalar/Defer.pm
 SHA1 f89e83f7a812e3b8c6afe96bb087d0b8218cbd04 t/01-basic.t
 SHA1 2be303573646cd1aee91665c353bce5cb0efd349 t/02-is.t
 SHA1 c3ea4c2671256fad58804f6a00d8d48f6afc2349 t/03-autoload.t
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Version: GnuPG v2.0.14 (GNU/Linux)
 
-iEYEARECAAYFAktUvE0ACgkQEi9d9xCOQEZvCwCgnjR9D4Ajnyx2LOdmUyAhJNkw
-yi8An2z/h9KH3F31g5nuGxsOFwBuatdV
-=1/F/
+iEYEARECAAYFAktjt8UACgkQMflWJZZAbqBoWwCglS7ov+kdfDP8YSN3W1YB9wg+
+WJUAoJza9HwQuOZsvHipuNHgBwzOslZU
+=8sOI
 -----END PGP SIGNATURE-----
