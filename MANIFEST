@@ -26,3 +26,4 @@ SIGNATURE
 t/01-basic.t
 t/02-is.t
 t/03-autoload.t
+t/04-threads.t

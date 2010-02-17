@@ -101,7 +101,10 @@ BEGIN {
     };
 
     {
-        foreach my $sym (grep { $_ ne 'DESTROY' and $_ ne 'DEMOLISH' and $_ ne 'BEGIN' and $_ ne 'END' and $_ ne 'AUTOLOAD' } keys %UNIVERSAL::) {
+        foreach my $sym (grep {
+             $_ ne 'DESTROY' and $_ ne 'DEMOLISH' and $_ ne 'BEGIN'
+         and $_ ne 'END' and $_ ne 'AUTOLOAD' and $_ ne 'CLONE_SKIP'
+        } keys %UNIVERSAL::) {
             my $code = q[
                 sub $sym {
                     if ( defined Scalar::Util::blessed($_[0]) ) {
@@ -109,6 +112,9 @@ BEGIN {
                         goto &{$_[0]->can("$sym")};
                     }
                     else {
+                        # Protect against future ALLCAPS methods
+                        return if $_[0] eq Scalar::Defer::DEFER_PACKAGE;
+
                         return shift->SUPER::$sym(@_);
                     }
                 }
