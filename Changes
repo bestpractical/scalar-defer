@@ -1,3 +1,7 @@
+[Changes for 0.23 - 0210-02-17]
+
+* Fix for [rt.cpan.org #54609] If Scalar::Defer is loaded after a thread is created, no more threads can be started. - SPROUT
+
 [Changes for 0.22 - 2010-01-29]
 
 * No code changes; note performance problems under 5.8.9
